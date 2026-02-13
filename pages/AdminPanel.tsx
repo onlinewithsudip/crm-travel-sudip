@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Lead, LeadStatus, LeadSource, PrebuiltItinerary, User, UserRole, AgencySettings } from '../types';
+import { Lead, LeadStatus, LeadSource, PrebuiltItinerary, User, UserRole, AgencySettings, Webhook } from '../types';
 import { 
   BarChart, 
   Bar, 
@@ -30,7 +30,14 @@ import {
   Image as ImageIcon, 
   Calendar,
   Save,
-  Check
+  Check,
+  Webhook as WebhookIcon,
+  Link2,
+  Copy,
+  Zap,
+  Globe2,
+  Search,
+  Facebook
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -43,6 +50,9 @@ interface AdminPanelProps {
   setAgencySettings: React.Dispatch<React.SetStateAction<AgencySettings>>;
   currentUser: User;
   onExternalLead: (lead: Omit<Lead, 'id' | 'createdAt'>) => void;
+  webhooks: Webhook[];
+  onAddWebhook: (w: Webhook) => void;
+  onRemoveWebhook: (id: string) => void;
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ 
@@ -51,12 +61,22 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   users, 
   onAddTemplate, 
   onSaveUser, 
-  currentUser 
+  currentUser,
+  webhooks,
+  onAddWebhook,
+  onRemoveWebhook
 }) => {
-  const [activeTab, setActiveTab] = useState<'analytics' | 'reports' | 'templates' | 'users'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'reports' | 'templates' | 'users' | 'integrations'>('analytics');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showWebhookModal, setShowWebhookModal] = useState(false);
   const [selectedAgentsForComparison, setSelectedAgentsForComparison] = useState<string[]>([]);
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
   
+  const [webhookForm, setWebhookForm] = useState({
+    name: '',
+    source: LeadSource.WEBSITE
+  });
+
   const [templateForm, setTemplateForm] = useState<Omit<PrebuiltItinerary, 'id'>>({
     title: '',
     destination: '',
@@ -117,6 +137,37 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     setShowTemplateModal(false);
   };
 
+  const handleDeployWebhook = (e: React.FormEvent) => {
+    e.preventDefault();
+    const sourceSlug = webhookForm.source.toLowerCase().replace(/\s+/g, '_');
+    const newWebhook: Webhook = {
+      id: `WH-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
+      name: webhookForm.name,
+      source: webhookForm.source as LeadSource,
+      endpointUrl: `https://api.letmetravel.in/v1/ingest/${sourceSlug}_${Math.random().toString(36).substr(2, 4)}`,
+      secretKey: `lmt_sec_${Math.random().toString(36).substr(2, 8)}`,
+      status: 'Active',
+      createdAt: new Date().toISOString()
+    };
+    onAddWebhook(newWebhook);
+    setShowWebhookModal(false);
+    setWebhookForm({ name: '', source: LeadSource.WEBSITE });
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopyStatus(label);
+    setTimeout(() => setCopyStatus(null), 2000);
+  };
+
+  const getSourceIcon = (source: LeadSource) => {
+    switch (source) {
+      case LeadSource.FACEBOOK: return <Facebook size={14} />;
+      case LeadSource.GOOGLE: return <Search size={14} />;
+      default: return <Globe2 size={14} />;
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -129,11 +180,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
             <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Agency Architecture & Insights</p>
           </div>
         </div>
-        <div className="flex p-1 bg-slate-100 rounded-2xl border border-slate-200 shadow-inner no-print">
+        <div className="flex p-1 bg-slate-100 rounded-2xl border border-slate-200 shadow-inner no-print overflow-x-auto">
           <TabButton active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')}>Analytics</TabButton>
           <TabButton active={activeTab === 'reports'} onClick={() => setActiveTab('reports')}>Comparison</TabButton>
           <TabButton active={activeTab === 'templates'} onClick={() => setActiveTab('templates')}>Blueprints</TabButton>
           <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')}>Team</TabButton>
+          <TabButton active={activeTab === 'integrations'} onClick={() => setActiveTab('integrations')}>Integrations</TabButton>
         </div>
       </div>
 
@@ -311,6 +363,80 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
       )}
 
+      {activeTab === 'integrations' && (
+        <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
+           <div className="bg-white p-10 rounded-[48px] border border-slate-200 shadow-xl space-y-8">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                 <div>
+                    <h3 className="text-2xl font-black text-[#001e42] uppercase italic flex items-center gap-4">
+                       <WebhookIcon className="text-orange-600" /> Webhook Deployment Center
+                    </h3>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Ingest leads from Website, Facebook, and Google automatically.</p>
+                 </div>
+                 <button 
+                    onClick={() => setShowWebhookModal(true)} 
+                    className="bg-orange-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-3 hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/10"
+                 >
+                    <Zap size={18} /> Deploy New Pipeline
+                 </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                 {webhooks.length === 0 ? (
+                   <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-[40px]">
+                      <Link2 size={48} className="mx-auto text-slate-200 mb-4" />
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No active ingestion pipelines</p>
+                   </div>
+                 ) : (
+                   webhooks.map(wh => (
+                     <div key={wh.id} className="bg-slate-50 border border-slate-100 rounded-[32px] p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-8 group hover:bg-white hover:shadow-2xl hover:border-orange-100 transition-all">
+                        <div className="flex items-start gap-6">
+                           <div className="w-14 h-14 rounded-2xl bg-[#001e42] text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                              {getSourceIcon(wh.source)}
+                           </div>
+                           <div>
+                              <div className="flex items-center gap-3">
+                                 <h4 className="text-lg font-black text-[#001e42] uppercase italic">{wh.name}</h4>
+                                 <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-black uppercase rounded-md">Live</span>
+                              </div>
+                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Source: {wh.source} • Created {new Date(wh.createdAt).toLocaleDateString()}</p>
+                           </div>
+                        </div>
+
+                        <div className="flex-1 max-w-xl space-y-3">
+                           <div className="space-y-1">
+                              <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-2">Endpoint URL</label>
+                              <div className="flex items-center bg-white border border-slate-200 rounded-xl p-3 shadow-inner">
+                                 <code className="text-[10px] text-slate-600 font-bold flex-1 truncate">{wh.endpointUrl}</code>
+                                 <button onClick={() => copyToClipboard(wh.endpointUrl, 'URL')} className="ml-3 p-1.5 text-slate-400 hover:text-orange-600 transition-colors"><Copy size={14} /></button>
+                              </div>
+                           </div>
+                           <div className="space-y-1">
+                              <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-2">Secret Token</label>
+                              <div className="flex items-center bg-white border border-slate-200 rounded-xl p-3 shadow-inner">
+                                 <code className="text-[10px] text-slate-400 font-bold flex-1 truncate">••••••••••••••••••••</code>
+                                 <button onClick={() => copyToClipboard(wh.secretKey, 'Token')} className="ml-3 p-1.5 text-slate-400 hover:text-orange-600 transition-colors"><Copy size={14} /></button>
+                              </div>
+                           </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                           <button onClick={() => onRemoveWebhook(wh.id)} className="p-3 bg-white text-slate-400 hover:text-rose-600 border border-slate-100 rounded-xl transition-all shadow-sm"><Trash2 size={18} /></button>
+                        </div>
+                     </div>
+                   ))
+                 )}
+              </div>
+           </div>
+
+           {copyStatus && (
+              <div className="fixed bottom-10 right-10 bg-[#001e42] text-white px-8 py-4 rounded-2xl shadow-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 animate-in slide-in-from-right duration-300 z-50">
+                 <Check className="text-emerald-500" size={18} /> {copyStatus} Copied to clipboard
+              </div>
+           )}
+        </div>
+      )}
+
       {/* Blueprint Modal */}
       {showTemplateModal && (
         <div className="fixed inset-0 bg-[#001e42]/90 backdrop-blur-xl flex items-center justify-center z-50 p-6 no-print">
@@ -361,12 +487,43 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
            </div>
         </div>
       )}
+
+      {/* Webhook Deployment Modal */}
+      {showWebhookModal && (
+        <div className="fixed inset-0 bg-[#001e42]/90 backdrop-blur-xl flex items-center justify-center z-50 p-6 no-print">
+           <div className="bg-white rounded-[56px] w-full max-w-lg shadow-2xl overflow-hidden flex flex-col animate-in zoom-in duration-500">
+              <div className="p-10 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center shrink-0">
+                 <h3 className="text-2xl font-black text-[#001e42] uppercase italic">Deploy Pipeline</h3>
+                 <button onClick={() => setShowWebhookModal(false)} className="p-3 text-slate-400 hover:text-rose-600 transition-colors"><X size={28}/></button>
+              </div>
+              <form onSubmit={handleDeployWebhook} className="p-10 space-y-10">
+                 <div className="space-y-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Pipeline Name</label>
+                       <input required value={webhookForm.name} onChange={e => setWebhookForm({...webhookForm, name: e.target.value})} placeholder="e.g. Website Home Form" className="w-full border-2 border-slate-100 rounded-3xl p-5 text-xs font-black focus:border-orange-500 outline-none uppercase" />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Data Source</label>
+                       <select value={webhookForm.source} onChange={e => setWebhookForm({...webhookForm, source: e.target.value as LeadSource})} className="w-full border-2 border-slate-100 rounded-3xl p-5 text-xs font-black focus:border-orange-500 outline-none uppercase appearance-none bg-white">
+                          <option value={LeadSource.WEBSITE}>Website Pipeline</option>
+                          <option value={LeadSource.FACEBOOK}>Facebook Leads Center</option>
+                          <option value={LeadSource.GOOGLE}>Google Search Ads</option>
+                       </select>
+                    </div>
+                 </div>
+                 <button type="submit" className="w-full bg-orange-600 text-white font-black py-6 rounded-[32px] uppercase tracking-widest text-xs hover:bg-orange-700 transition-all shadow-2xl flex items-center justify-center gap-3">
+                    <Zap size={18} /> Deploy Ingestion Engine
+                 </button>
+              </form>
+           </div>
+        </div>
+      )}
     </div>
   );
 };
 
 const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
-  <button onClick={onClick} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${active ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>
+  <button onClick={onClick} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shrink-0 ${active ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-700'}`}>
     {children}
   </button>
 );

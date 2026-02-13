@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// Fix for useNavigate missing from react-router-dom exports in some environments.
+import * as RouterDOM from 'react-router-dom';
+const { useNavigate } = RouterDOM as any;
+
 import { Lead, LeadStatus, LeadSource, User, UserRole } from '../types';
 import { Search, Filter, Plus, Mail, ExternalLink, Calendar, X, Save, User as UserIcon, MapPin, IndianRupee, MessageSquare, Phone } from 'lucide-react';
 

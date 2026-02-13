@@ -1,20 +1,15 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import * as RouterDOM from 'react-router-dom';
+const { useLocation } = RouterDOM as any;
+
 import { Lead, PrebuiltItinerary, User, UserRole } from '../types';
 import { 
   ArrowRight,
   ChevronLeft,
-  Calendar,
-  User as UserIcon,
   Printer,
   MessageCircle,
-  Zap,
-  Check,
   Mountain,
-  Map,
   Loader2,
-  Image as ImageIcon,
-  Search,
   X,
   Sparkles,
   MapPin,
@@ -26,6 +21,8 @@ interface ItineraryBuilderProps {
   templates: PrebuiltItinerary[];
   currentUser: User;
 }
+
+const BRAND_LOGO_URL = "https://i.ibb.co/vzR0y6y/lmt-logo.png"; 
 
 const IMAGERY = {
   COVER: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2000&auto=format&fit=crop",
@@ -167,7 +164,6 @@ const ItineraryBuilder: React.FC<ItineraryBuilderProps> = ({ leads, templates, c
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // Use html2pdf from global window
     const h2p = (window as any).html2pdf;
     if (h2p) {
         setIsProcessing(true);
@@ -176,7 +172,7 @@ const ItineraryBuilder: React.FC<ItineraryBuilderProps> = ({ leads, templates, c
         }).catch((err: any) => {
             console.error("PDF Export Error:", err);
             setIsProcessing(false);
-            window.print(); // Fallback
+            window.print();
         });
     } else {
         window.print();
@@ -359,8 +355,8 @@ const ItineraryBuilder: React.FC<ItineraryBuilderProps> = ({ leads, templates, c
         <div className="space-y-16 max-w-[800px] mx-auto animate-in fade-in zoom-in duration-500">
            <div id="itinerary-proposal-container" className="bg-white shadow-2xl border border-slate-100 overflow-hidden rounded-lg">
               <div className="p-20 flex flex-col items-center text-center gap-10 bg-[#001e42] text-white page-break">
-                 <div className="w-32 h-32 bg-orange-600 rounded-[40px] flex items-center justify-center shadow-2xl rotate-3">
-                    <Mountain size={64} className="text-white" />
+                 <div className="w-48 h-auto bg-white p-6 rounded-[40px] flex items-center justify-center shadow-2xl transition-transform hover:scale-105 duration-500">
+                    <img src={BRAND_LOGO_URL} alt="Let Me Travel" className="w-full h-auto object-contain" crossOrigin="anonymous" />
                  </div>
                  <h2 className="text-5xl font-black uppercase italic tracking-tighter">Bespoke Himalayan Journey</h2>
                  <div className="w-20 h-1 bg-orange-600 rounded-full"></div>

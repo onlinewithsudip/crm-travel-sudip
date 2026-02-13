@@ -1,6 +1,8 @@
-
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+// Fix for useParams and useNavigate missing from react-router-dom exports in some environments.
+import * as RouterDOM from 'react-router-dom';
+const { useParams, useNavigate } = RouterDOM as any;
+
 import { Lead, LeadStatus, User, UserRole, FollowUp } from '../types';
 import { 
   ArrowLeft, Mail, Phone, MapPin, IndianRupee, Calendar, 
@@ -17,7 +19,7 @@ interface LeadDetailsProps {
 }
 
 const LeadDetails: React.FC<LeadDetailsProps> = ({ leads, currentUser, onUpdateStatus, onReassign, onUpdateFollowUps }) => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const navigate = useNavigate();
   const lead = leads.find(l => l.id === id);
 

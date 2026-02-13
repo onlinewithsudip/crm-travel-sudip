@@ -2,22 +2,12 @@ import React, { useState, useMemo, useRef } from 'react';
 import { Lead, User } from '../types';
 import { 
   Plus, 
-  Trash2, 
-  Calendar, 
   ChevronLeft, 
   ArrowRight,
-  User as UserIcon,
-  Globe,
   Printer,
   MessageCircle,
-  Image as ImageIcon,
-  CheckCircle2,
-  MapPin,
   Mountain,
-  Loader2,
-  Sparkles,
-  Search,
-  X
+  Loader2
 } from 'lucide-react';
 
 interface ManualItineraryProps {
@@ -37,14 +27,7 @@ interface CustomDay {
   };
 }
 
-const LOCATIONS = ['Darjeeling', 'Sikkim', 'Gangtok', 'North Sikkim', 'Pelling', 'Kalimpong'];
-
-const DESTINATION_GALLERY: Record<string, string[]> = {
-  'Darjeeling': [
-    "https://images.unsplash.com/photo-1596202113262-959c5d011684?auto=format&fit=crop&q=60&w=800",
-    "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&q=60&w=800"
-  ]
-};
+const BRAND_LOGO_URL = "https://i.ibb.co/vzR0y6y/lmt-logo.png";
 
 const ManualItinerary: React.FC<ManualItineraryProps> = ({ leads, currentUser }) => {
   const [selectedLeadId, setSelectedLeadId] = useState('');
@@ -52,7 +35,6 @@ const ManualItinerary: React.FC<ManualItineraryProps> = ({ leads, currentUser })
   const [view, setView] = useState<'builder' | 'preview'>('builder');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
-  const [showGallery, setShowGallery] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeImageUploadIdx, setActiveImageUploadIdx] = useState<number | null>(null);
 
@@ -261,8 +243,8 @@ const ManualItinerary: React.FC<ManualItineraryProps> = ({ leads, currentUser })
         <div className="space-y-16 max-w-[800px] mx-auto animate-in fade-in zoom-in duration-500">
            <div id="manual-itinerary-container" className="bg-white shadow-2xl border border-slate-100 overflow-hidden rounded-lg">
               <div className="p-20 flex flex-col items-center text-center gap-10 bg-slate-50 page-break">
-                 <div className="w-32 h-32 bg-orange-600 rounded-[40px] flex items-center justify-center shadow-2xl rotate-6">
-                    <Mountain size={64} className="text-white" />
+                 <div className="w-48 h-auto bg-white p-6 rounded-[40px] flex items-center justify-center shadow-2xl transition-transform hover:scale-105 duration-500">
+                    <img src={BRAND_LOGO_URL} alt="Let Me Travel" className="w-full h-auto object-contain" crossOrigin="anonymous" />
                  </div>
                  <h2 className="text-6xl font-black text-[#001e42] uppercase italic tracking-tighter text-wrap">Your Himalayan Expedition</h2>
                  <div className="w-20 h-1 bg-orange-600 rounded-full"></div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Lead, User, UserRole } from '../types';
+import { EditableText } from '../App';
 import { 
   TrendingUp, 
   Users, 
@@ -43,23 +44,21 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, currentUser }) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#001e42] tracking-tight uppercase italic">
-            {isAdminTier ? 'Agency Command' : 'My Workspace'}
+            <EditableText 
+              contentKey="dash_title" 
+              defaultVal={isAdminTier ? 'Agency Command' : 'My Workspace'} 
+            />
           </h1>
-          <p className="text-xs text-slate-500 font-medium mt-1">Real-time operational pulse.</p>
-        </div>
-        <div className="flex gap-2">
-          <select className="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-sm outline-none text-slate-600">
-            <option>Last 30 Days</option>
-            <option>Today</option>
-            <option>All Time</option>
-          </select>
+          <p className="text-xs text-slate-500 font-medium mt-1">
+            <EditableText contentKey="dash_subtitle" defaultVal="Real-time operational pulse." />
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard title="Active Leads" value={leads.length.toString()} icon={<Users size={18} className="text-orange-600" />} trend="+12%" trendUp={true} />
-        <StatCard title="Confirmed" value="42" icon={<CheckCircle2 size={18} className="text-emerald-600" />} trend="+4%" trendUp={true} />
-        <StatCard title="Conversion" value="32.8%" icon={<TrendingUp size={18} className="text-[#001e42]" />} trend="-1%" trendUp={false} />
+        <StatCard title={<EditableText contentKey="stat_leads" defaultVal="Active Leads" />} value={leads.length.toString()} icon={<Users size={18} className="text-orange-600" />} trend="+12%" trendUp={true} />
+        <StatCard title={<EditableText contentKey="stat_confirmed" defaultVal="Confirmed" />} value="42" icon={<CheckCircle2 size={18} className="text-emerald-600" />} trend="+4%" trendUp={true} />
+        <StatCard title={<EditableText contentKey="stat_conversion" defaultVal="Conversion" />} value="32.8%" icon={<TrendingUp size={18} className="text-[#001e42]" />} trend="-1%" trendUp={false} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -68,12 +67,13 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, currentUser }) => {
             <Zap size={100} className="absolute -right-4 -top-4 opacity-5 rotate-12 group-hover:scale-110 transition-all duration-700" />
             <div className="relative flex justify-between items-center mb-6">
               <div>
-                <h3 className="text-sm font-bold uppercase italic text-orange-500 tracking-wider">Mission Queue</h3>
-                <p className="text-slate-400 font-bold text-[9px] mt-0.5 uppercase tracking-widest opacity-80">Priority Targets</p>
+                <h3 className="text-sm font-bold uppercase italic text-orange-500 tracking-wider">
+                  <EditableText contentKey="queue_title" defaultVal="Mission Queue" />
+                </h3>
+                <p className="text-slate-400 font-bold text-[9px] mt-0.5 uppercase tracking-widest opacity-80">
+                  <EditableText contentKey="queue_subtitle" defaultVal="Priority Targets" />
+                </p>
               </div>
-              <button className="text-[9px] font-bold bg-white/10 px-3 py-1.5 rounded-lg hover:bg-white/20 transition-all uppercase tracking-widest border border-white/5">
-                Explore All
-              </button>
             </div>
             
             <div className="space-y-2">
@@ -88,9 +88,6 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, currentUser }) => {
                       <p className="text-[9px] text-slate-400 font-medium">Proposal: {lead.destination}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                     <p className="text-[9px] font-bold uppercase tracking-widest text-orange-500">Today</p>
-                  </div>
                 </div>
               ))}
             </div>
@@ -99,7 +96,7 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, currentUser }) => {
           <div className="bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm min-w-0">
             <h3 className="text-xs font-bold text-[#001e42] mb-6 flex items-center gap-2 uppercase italic tracking-wider">
               <span className="w-1 h-4 bg-orange-600 rounded-full"></span>
-              Revenue Sources
+              <EditableText contentKey="rev_source_title" defaultVal="Revenue Sources" />
             </h3>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -119,8 +116,9 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, currentUser }) => {
 
         <div className="bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xs font-bold text-[#001e42] uppercase italic tracking-wider">Recent Activity</h3>
-            <Filter size={12} className="text-slate-400" />
+            <h3 className="text-xs font-bold text-[#001e42] uppercase italic tracking-wider">
+              <EditableText contentKey="recent_act_title" defaultVal="Recent Activity" />
+            </h3>
           </div>
           <div className="space-y-4 flex-1">
             {leads.slice(0, 5).map((lead) => (
@@ -134,18 +132,11 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, currentUser }) => {
                     <p className="text-[9px] text-slate-400 font-medium truncate w-24">{lead.destination}</p>
                   </div>
                 </div>
-                <span className={`text-[8px] font-bold uppercase px-2 py-0.5 rounded-md border ${
-                  lead.status === 'Booked' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                  lead.status === 'Lost' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                  'bg-blue-50 text-blue-600 border-blue-100'
-                }`}>
-                  {lead.status}
-                </span>
               </div>
             ))}
           </div>
           <button className="w-full mt-6 pt-4 border-t border-slate-100 text-[9px] font-bold text-orange-600 uppercase tracking-widest hover:text-orange-700 transition-colors flex items-center justify-center gap-2 group">
-            View Full Pipeline <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
+            <EditableText contentKey="btn_view_pipeline" defaultVal="View Full Pipeline" /> <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </div>
@@ -153,7 +144,7 @@ const Dashboard: React.FC<DashboardProps> = ({ leads, currentUser }) => {
   );
 };
 
-const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode; trend: string; trendUp: boolean }> = ({ title, value, icon, trend, trendUp }) => (
+const StatCard: React.FC<{ title: React.ReactNode; value: string; icon: React.ReactNode; trend: string; trendUp: boolean }> = ({ title, value, icon, trend, trendUp }) => (
   <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md group">
     <div className="flex justify-between items-start mb-4">
       <div className="p-2 bg-slate-50 rounded-lg group-hover:scale-110 transition-transform duration-300">{icon}</div>

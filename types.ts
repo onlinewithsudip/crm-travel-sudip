@@ -51,7 +51,7 @@ export interface User {
   name: string;
   role: UserRole;
   email: string;
-  hierarchyLevel: number; // 1 (Junior) to 5 (Director)
+  hierarchyLevel: number;
 }
 
 export interface Lead {
@@ -71,21 +71,13 @@ export interface Lead {
   followUps?: FollowUp[];
 }
 
-export interface ItineraryDay {
-  day: number;
-  title: string;
-  activities: string[];
-  meals: string[];
-  accommodation: string;
-}
-
 export interface PrebuiltItinerary {
   id: string;
   title: string;
   destination: string;
   description: string;
   durationDays: number;
-  days: ItineraryDay[];
+  days: any[];
   totalCost: number;
   thumbnail?: string;
 }
@@ -93,8 +85,22 @@ export interface PrebuiltItinerary {
 export interface Vehicle {
   id: string;
   model: string;
-  type: 'SUV' | 'Sedan' | 'Bus' | 'Mini-Bus';
+  type: string;
   plateNumber: string;
-  status: 'Available' | 'On Trip' | 'Maintenance';
+  status: string;
   currentDriver?: string;
+}
+
+export interface Webhook {
+  id: string;
+  name: string;
+  source: LeadSource;
+  endpointUrl: string;
+  secretKey: string;
+  status: 'Active' | 'Inactive';
+  createdAt: string;
+}
+
+export interface AppContent {
+  [key: string]: string;
 }
