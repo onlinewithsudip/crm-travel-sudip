@@ -57,7 +57,6 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
     lastAssignedAgentIndex: 0
   });
   
-  const isAdmin = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPER_ADMIN;
   const isSuperAdmin = currentUser.role === UserRole.SUPER_ADMIN;
   
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -69,9 +68,9 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
     if (path.startsWith('/itinerary')) return 'Travel Designer';
     if (path === '/itinerary-builder') return 'Custom Construction';
     if (path === '/vehicles') return 'Fleet Management';
-    if (path === '/admin') return isSuperAdmin ? 'Global Command' : 'Admin Panel';
+    if (path === '/admin') return 'Global Command';
     return 'Agency Operations';
-  }, [location.pathname, isSuperAdmin]);
+  }, [location.pathname]);
 
   const handleAddLead = (newLeadData: Omit<Lead, 'id' | 'createdAt'>) => {
     const newLead: Lead = {
@@ -111,18 +110,29 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
         </div>
 
         <div className="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-          <SidebarLink to="/" icon={<BarChart3 size={18} />} label="Overview" onClick={() => setIsSidebarOpen(false)} />
+          {/* Only Super Admin sees Dashboard/Overview */}
+          {isSuperAdmin && (
+            <SidebarLink to="/" icon={<BarChart3 size={18} />} label="Overview" onClick={() => setIsSidebarOpen(false)} />
+          )}
+          
+          <div className="pt-2 pb-2 px-4">
+            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Operations</p>
+          </div>
+          
+          {/* All Users see Leads and Itinerary Pages */}
           <SidebarLink to="/leads" icon={<LayoutDashboard size={18} />} label="Pipeline" onClick={() => setIsSidebarOpen(false)} />
           <SidebarLink to="/itinerary" icon={<Map size={18} />} label="Designer" onClick={() => setIsSidebarOpen(false)} />
           <SidebarLink to="/itinerary-builder" icon={<Edit3 size={18} />} label="Custom Builder" onClick={() => setIsSidebarOpen(false)} />
-          <SidebarLink to="/vehicles" icon={<Car size={18} />} label="Fleet" onClick={() => setIsSidebarOpen(false)} />
           
-          {isAdmin && (
+          {/* Only Super Admin sees Fleet, Admin Panel, and Settings */}
+          {isSuperAdmin && (
             <>
+              <SidebarLink to="/vehicles" icon={<Car size={18} />} label="Fleet" onClick={() => setIsSidebarOpen(false)} />
+              
               <div className="pt-6 pb-2 px-4">
                 <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Management</p>
               </div>
-              <SidebarLink to="/admin" icon={<ShieldCheck size={18} />} label={isSuperAdmin ? "Global Panel" : "Admin Panel"} onClick={() => setIsSidebarOpen(false)} />
+              <SidebarLink to="/admin" icon={<ShieldCheck size={18} />} label="Global Panel" onClick={() => setIsSidebarOpen(false)} />
               <SidebarLink to="/settings" icon={<SettingsIcon size={18} />} label="Settings" onClick={() => setIsSidebarOpen(false)} />
             </>
           )}
@@ -172,15 +182,20 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
 
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar main-content-area">
           <Routes>
-            <Route path="/" element={<Dashboard leads={leads} currentUser={currentUser} />} />
+            {/* Super Admin sees Dashboard, others are redirected to Leads */}
+            <Route path="/" element={isSuperAdmin ? <Dashboard leads={leads} currentUser={currentUser} /> : <Navigate to="/leads" replace />} />
+            
             <Route path="/leads" element={<Leads leads={leads} onAddLead={handleAddLead} onUpdateStatus={() => {}} currentUser={currentUser} />} />
             <Route path="/leads/:id" element={<LeadDetails leads={leads} onUpdateStatus={() => {}} onReassign={() => {}} currentUser={currentUser} onUpdateFollowUps={() => {}} />} />
             <Route path="/itinerary" element={<ItineraryBuilder leads={leads} templates={templates} currentUser={currentUser} />} />
             <Route path="/itinerary-builder" element={<ManualItinerary leads={leads} currentUser={currentUser} />} />
-            <Route path="/vehicles" element={<Vehicles />} />
-            <Route path="/admin" element={<AdminPanel leads={leads} templates={templates} users={[]} onAddTemplate={() => {}} onSaveUser={() => {}} agencySettings={agencySettings} setAgencySettings={setAgencySettings} currentUser={currentUser} onExternalLead={handleAddLead} />} />
-            <Route path="/settings" element={<Settings currentUser={currentUser} users={[]} onSaveUser={() => {}} />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            
+            {/* Restricted Routes for Super Admin Only */}
+            <Route path="/vehicles" element={isSuperAdmin ? <Vehicles /> : <Navigate to="/leads" replace />} />
+            <Route path="/admin" element={isSuperAdmin ? <AdminPanel leads={leads} templates={templates} users={[]} onAddTemplate={() => {}} onSaveUser={() => {}} agencySettings={agencySettings} setAgencySettings={setAgencySettings} currentUser={currentUser} onExternalLead={handleAddLead} /> : <Navigate to="/leads" replace />} />
+            <Route path="/settings" element={isSuperAdmin ? <Settings currentUser={currentUser} users={[]} onSaveUser={() => {}} /> : <Navigate to="/leads" replace />} />
+            
+            <Route path="*" element={<Navigate to={isSuperAdmin ? "/" : "/leads"} replace />} />
           </Routes>
         </div>
       </main>

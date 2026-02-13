@@ -1,7 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 export const generateItineraryWithAI = async (destination: string, duration: number, interests: string) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+  // Always initialize GoogleGenAI exactly as per guidelines: const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -34,6 +35,7 @@ export const generateItineraryWithAI = async (destination: string, duration: num
       }
     });
 
+    // Access the .text property directly from the response object as specified in the guidelines.
     return JSON.parse(response.text || '{}');
   } catch (error) {
     console.error("Gemini Error:", error);

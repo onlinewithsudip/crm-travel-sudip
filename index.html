@@ -13,36 +13,13 @@
           font-family: 'Plus Jakarta Sans', sans-serif; 
           letter-spacing: -0.01em;
         }
-        .text-brand-orange { color: #f26522; }
-        .bg-brand-orange { background-color: #f26522; }
-        .border-brand-orange { border-color: #f26522; }
-        .text-brand-navy { color: #001e42; }
-        .bg-brand-navy { background-color: #001e42; }
-        
         .transition-all { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f8fafc;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         h1, h2, h3 { letter-spacing: -0.03em; }
-        input::placeholder { color: #94a3b8; font-weight: 500; }
-
-        .page-break {
-            page-break-after: always;
-            break-after: page;
-        }
-
+        .page-break { page-break-after: always; break-after: page; }
         @media print {
             html, body, #root, [class*="flex h-screen"], main, .main-content-area {
                 height: auto !important;
@@ -52,37 +29,9 @@
                 position: static !important;
                 background: white !important;
                 width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
             }
-            nav, header, aside, .no-print, button, .fixed, .shadow-xl, .shadow-2xl {
-                display: none !important;
-                visibility: hidden !important;
-            }
-            #itinerary-proposal-container, #manual-itinerary-container {
-                width: 100% !important;
-                max-width: none !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                box-shadow: none !important;
-                border: none !important;
-                background: white !important;
-            }
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            img {
-                max-width: 100% !important;
-                page-break-inside: avoid;
-            }
-            @page {
-                margin: 1.5cm;
-                size: portrait;
-            }
-            .text-slate-700, .text-slate-500, .text-slate-400 {
-                color: #334155 !important;
-            }
+            nav, header, aside, .no-print, button, .fixed { display: none !important; }
+            @page { margin: 1.5cm; size: portrait; }
         }
     </style>
 <script type="importmap">
@@ -91,12 +40,12 @@
     "react": "https://esm.sh/react@^19.2.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
     "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
     "recharts": "https://esm.sh/recharts@^3.7.0",
     "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
-    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0"
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
   }
 }
 </script>
