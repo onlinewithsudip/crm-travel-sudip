@@ -1,0 +1,7 @@
+{
+  "name": "Let Me Travel CRM",
+  "description": "Professional Travel Agency CRM for 'Let Me Travel'. Features lead management, premium itinerary designer, and fleet tracking.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
