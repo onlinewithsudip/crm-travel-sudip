@@ -110,7 +110,6 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
         </div>
 
         <div className="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-          {/* Only Super Admin sees Dashboard/Overview */}
           {isSuperAdmin && (
             <SidebarLink to="/" icon={<BarChart3 size={18} />} label="Overview" onClick={() => setIsSidebarOpen(false)} />
           )}
@@ -119,12 +118,10 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
             <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Operations</p>
           </div>
           
-          {/* All Users see Leads and Itinerary Pages */}
           <SidebarLink to="/leads" icon={<LayoutDashboard size={18} />} label="Pipeline" onClick={() => setIsSidebarOpen(false)} />
           <SidebarLink to="/itinerary" icon={<Map size={18} />} label="Designer" onClick={() => setIsSidebarOpen(false)} />
           <SidebarLink to="/itinerary-builder" icon={<Edit3 size={18} />} label="Custom Builder" onClick={() => setIsSidebarOpen(false)} />
           
-          {/* Only Super Admin sees Fleet, Admin Panel, and Settings */}
           {isSuperAdmin && (
             <>
               <SidebarLink to="/vehicles" icon={<Car size={18} />} label="Fleet" onClick={() => setIsSidebarOpen(false)} />
@@ -150,7 +147,7 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
           </div>
           <button 
             onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-rose-400 hover:text-white hover:bg-rose-500/20 transition-all text-[13px]"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-rose-400 hover:text-white hover:bg-rose-500/20 transition-all text-[13px] font-bold uppercase tracking-wider"
           >
             <LogOut size={16} /> Logout
           </button>
@@ -177,12 +174,18 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
               <Bell size={18} />
               <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-orange-600 rounded-full border-2 border-white"></span>
             </button>
+            <div className="w-px h-6 bg-slate-200 mx-1 hidden md:block"></div>
+            <button 
+              onClick={onLogout}
+              className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-all text-[11px] font-bold uppercase tracking-wider border border-transparent hover:border-rose-100"
+            >
+              <LogOut size={14} /> Log Out
+            </button>
           </div>
         </header>
 
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar main-content-area">
           <Routes>
-            {/* Super Admin sees Dashboard, others are redirected to Leads */}
             <Route path="/" element={isSuperAdmin ? <Dashboard leads={leads} currentUser={currentUser} /> : <Navigate to="/leads" replace />} />
             
             <Route path="/leads" element={<Leads leads={leads} onAddLead={handleAddLead} onUpdateStatus={() => {}} currentUser={currentUser} />} />
@@ -190,7 +193,6 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
             <Route path="/itinerary" element={<ItineraryBuilder leads={leads} templates={templates} currentUser={currentUser} />} />
             <Route path="/itinerary-builder" element={<ManualItinerary leads={leads} currentUser={currentUser} />} />
             
-            {/* Restricted Routes for Super Admin Only */}
             <Route path="/vehicles" element={isSuperAdmin ? <Vehicles /> : <Navigate to="/leads" replace />} />
             <Route path="/admin" element={isSuperAdmin ? <AdminPanel leads={leads} templates={templates} users={[]} onAddTemplate={() => {}} onSaveUser={() => {}} agencySettings={agencySettings} setAgencySettings={setAgencySettings} currentUser={currentUser} onExternalLead={handleAddLead} /> : <Navigate to="/leads" replace />} />
             <Route path="/settings" element={isSuperAdmin ? <Settings currentUser={currentUser} users={[]} onSaveUser={() => {}} /> : <Navigate to="/leads" replace />} />
