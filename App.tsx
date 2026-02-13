@@ -15,7 +15,8 @@ import {
   FileText,
   Crown,
   Link as LinkIcon,
-  Edit3
+  Edit3,
+  LogOut
 } from 'lucide-react';
 
 import Dashboard from './pages/Dashboard';
@@ -26,14 +27,8 @@ import ManualItinerary from './pages/ManualItinerary';
 import Vehicles from './pages/Vehicles';
 import AdminPanel from './pages/AdminPanel';
 import Settings from './pages/Settings';
+import Login from './pages/Login';
 import { Lead, LeadSource, LeadStatus, PrebuiltItinerary, User, UserRole, RoutingStrategy, AgencySettings } from './types';
-
-const INITIAL_USERS: User[] = [
-  { id: 'u0', name: 'Super Director', role: UserRole.SUPER_ADMIN, email: 'owner@letmetravel.com', hierarchyLevel: 5 },
-  { id: 'u1', name: 'Aman Chopra', role: UserRole.ADMIN, email: 'aman@letmetravel.com', hierarchyLevel: 4 },
-  { id: 'u2', name: 'Sarah Miller', role: UserRole.SALES, email: 'sarah@letmetravel.com', hierarchyLevel: 3 },
-  { id: 'u3', name: 'Amit Kumar', role: UserRole.RESERVATION, email: 'amit@letmetravel.com', hierarchyLevel: 4 },
-];
 
 const INITIAL_LEADS: Lead[] = [
   {
@@ -45,33 +40,17 @@ const INITIAL_LEADS: Lead[] = [
     status: LeadStatus.CONTACTED,
     destination: 'Darjeeling',
     budget: '₹45,000',
-    assignedAgent: 'Aman Chopra',
+    assignedAgent: 'Sudip Thapa',
     assignedDepartment: UserRole.SALES,
     createdAt: new Date(Date.now() - 86400000).toISOString(),
     notes: 'Inquiry via Facebook Ad. Interested in honeymoon packages.'
-  },
-  {
-    id: 'L102',
-    name: 'Priya Das',
-    email: 'priya.das@example.com',
-    phone: '9822334455',
-    source: LeadSource.WEBSITE,
-    status: LeadStatus.PROPOSAL_SENT,
-    destination: 'Gangtok & North Sikkim',
-    budget: '₹75,000',
-    assignedAgent: 'Sarah Miller',
-    assignedDepartment: UserRole.SALES,
-    createdAt: new Date(Date.now() - 172800000).toISOString(),
-    notes: 'Website form submission. Group of 4 adults.'
   }
 ];
 
-const AppLayout: React.FC = () => {
+const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ currentUser, onLogout }) => {
   const location = useLocation();
   const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS);
   const [templates, setTemplates] = useState<PrebuiltItinerary[]>([]);
-  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
-  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS[0]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [agencySettings, setAgencySettings] = useState<AgencySettings>({
     routingStrategy: RoutingStrategy.ROUND_ROBIN,
@@ -102,22 +81,6 @@ const AppLayout: React.FC = () => {
     };
     setLeads(prev => [newLead, ...prev]);
   };
-
-  const handleAddTemplate = (template: PrebuiltItinerary) => {
-    setTemplates(prev => [template, ...prev]);
-  };
-
-  const handleSaveUser = (updatedUser: User) => {
-    setUsers(prev => {
-      const exists = prev.find(u => u.id === updatedUser.id);
-      if (exists) return prev.map(u => u.id === updatedUser.id ? updatedUser : u);
-      return [...prev, updatedUser];
-    });
-  };
-
-  const visibleUsersForSwitcher = useMemo(() => {
-    return users.filter(u => isSuperAdmin || u.role !== UserRole.SUPER_ADMIN);
-  }, [users, isSuperAdmin]);
 
   return (
     <div className="flex h-screen bg-[#f8fafc] overflow-hidden relative">
@@ -165,8 +128,8 @@ const AppLayout: React.FC = () => {
           )}
         </div>
 
-        <div className="p-3 border-t border-white/5 relative group">
-          <div className="p-3 rounded-xl bg-white/5 flex items-center gap-3 transition-all group-hover:bg-white/10 cursor-pointer">
+        <div className="p-3 border-t border-white/5 space-y-2">
+          <div className="p-3 rounded-xl bg-white/5 flex items-center gap-3 group relative">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs uppercase italic ${isSuperAdmin ? 'bg-amber-500' : 'bg-orange-500'}`}>
               {currentUser.name.charAt(0)}
             </div>
@@ -174,22 +137,13 @@ const AppLayout: React.FC = () => {
               <p className="text-xs font-bold truncate tracking-tight">{currentUser.name}</p>
               <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">{currentUser.role}</p>
             </div>
-            <ChevronRight size={12} className="text-slate-500 opacity-40 group-hover:opacity-100 transition-opacity" />
           </div>
-          <select 
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-            value={currentUser.id}
-            onChange={(e) => {
-              const user = users.find(u => u.id === e.target.value);
-              if (user) setCurrentUser(user);
-            }}
+          <button 
+            onClick={onLogout}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-rose-400 hover:text-white hover:bg-rose-500/20 transition-all text-[13px]"
           >
-            {visibleUsersForSwitcher.map(u => (
-              <option key={u.id} value={u.id}>
-                {u.name} ({u.role})
-              </option>
-            ))}
-          </select>
+            <LogOut size={16} /> Logout
+          </button>
         </div>
       </nav>
 
@@ -213,9 +167,6 @@ const AppLayout: React.FC = () => {
               <Bell size={18} />
               <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-orange-600 rounded-full border-2 border-white"></span>
             </button>
-            <button className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-xl hover:bg-orange-700 transition-all text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-orange-600/10">
-              <PlusCircle size={14} /> New Lead
-            </button>
           </div>
         </header>
 
@@ -227,8 +178,8 @@ const AppLayout: React.FC = () => {
             <Route path="/itinerary" element={<ItineraryBuilder leads={leads} templates={templates} currentUser={currentUser} />} />
             <Route path="/itinerary-builder" element={<ManualItinerary leads={leads} currentUser={currentUser} />} />
             <Route path="/vehicles" element={<Vehicles />} />
-            <Route path="/admin" element={<AdminPanel leads={leads} templates={templates} users={users} onAddTemplate={handleAddTemplate} onSaveUser={handleSaveUser} agencySettings={agencySettings} setAgencySettings={setAgencySettings} currentUser={currentUser} onExternalLead={handleAddLead} />} />
-            <Route path="/settings" element={<Settings currentUser={currentUser} users={users} onSaveUser={handleSaveUser} />} />
+            <Route path="/admin" element={<AdminPanel leads={leads} templates={templates} users={[]} onAddTemplate={() => {}} onSaveUser={() => {}} agencySettings={agencySettings} setAgencySettings={setAgencySettings} currentUser={currentUser} onExternalLead={handleAddLead} />} />
+            <Route path="/settings" element={<Settings currentUser={currentUser} users={[]} onSaveUser={() => {}} />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
@@ -254,9 +205,28 @@ const SidebarLink: React.FC<{ to: string; icon: React.ReactNode; label: string; 
 };
 
 const App: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('lmt_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const handleLogin = (user: User) => {
+    setCurrentUser(user);
+    localStorage.setItem('lmt_user', JSON.stringify(user));
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('lmt_user');
+  };
+
   return (
     <HashRouter>
-      <AppLayout />
+      {!currentUser ? (
+        <Login onLogin={handleLogin} />
+      ) : (
+        <AppLayout currentUser={currentUser} onLogout={handleLogout} />
+      )}
     </HashRouter>
   );
 };
