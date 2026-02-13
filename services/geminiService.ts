@@ -1,9 +1,7 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Guideline: Use process.env.API_KEY directly and instantiate fresh for each call
 export const generateItineraryWithAI = async (destination: string, duration: number, interests: string) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -36,7 +34,6 @@ export const generateItineraryWithAI = async (destination: string, duration: num
       }
     });
 
-    // Guideline: Access response.text as a property (not a method)
     return JSON.parse(response.text || '{}');
   } catch (error) {
     console.error("Gemini Error:", error);
