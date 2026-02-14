@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-// Fix for useParams and useNavigate missing from react-router-dom exports in some environments.
 import * as RouterDOM from 'react-router-dom';
 const { useParams, useNavigate } = RouterDOM as any;
 
 import { Lead, LeadStatus, User, UserRole, FollowUp } from '../types';
+import { EditableText } from '../App';
 import { 
   ArrowLeft, Mail, Phone, MapPin, IndianRupee, Calendar, 
   User as UserIcon, Clock, Share2, Plus, Trash2, Check, 
-  AlertCircle, Zap, ChevronRight 
+  AlertCircle, Zap, ChevronRight, Edit3 
 } from 'lucide-react';
 
 interface LeadDetailsProps {
@@ -22,8 +22,12 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ leads, currentUser, onUpdateS
   const { id } = useParams();
   const navigate = useNavigate();
   const lead = leads.find(l => l.id === id);
+  const [isEditing, setIsEditing] = useState(false);
 
   if (!lead) return null;
+
+  const canDelete = currentUser.role === UserRole.SUPER_ADMIN || currentUser.role === UserRole.ADMIN;
+  const canEdit = true; // All roles can edit lead details in this request
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -41,6 +45,21 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ leads, currentUser, onUpdateS
           </div>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
+          {canEdit && (
+            <button 
+              onClick={() => setIsEditing(!isEditing)}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-100 text-[#001e42] px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-200"
+            >
+              <Edit3 size={16} /> {isEditing ? 'Save Details' : 'Edit Lead'}
+            </button>
+          )}
+          {canDelete && (
+            <button 
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-rose-50 text-rose-600 px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all"
+            >
+              <Trash2 size={16} /> Delete Record
+            </button>
+          )}
           <button className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-orange-600/10">
             <Share2 size={16} /> Share Plan
           </button>
@@ -51,7 +70,8 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ leads, currentUser, onUpdateS
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white rounded-[32px] border border-slate-200 shadow-sm p-10">
             <h3 className="text-sm font-extrabold text-[#001e42] mb-8 flex items-center gap-2 uppercase italic">
-              <span className="w-1 h-5 bg-orange-600 rounded-full"></span> Traveller Info
+              <span className="w-1 h-5 bg-orange-600 rounded-full"></span> 
+              <EditableText contentKey="lead_info_header" defaultVal="Traveller Info" />
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <DetailBlock icon={<Mail size={18}/>} label="Email Address" value={lead.email} />
@@ -59,12 +79,25 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ leads, currentUser, onUpdateS
               <DetailBlock icon={<MapPin size={18}/>} label="Primary Destination" value={lead.destination} highlight />
               <DetailBlock icon={<IndianRupee size={18}/>} label="Planned Budget" value={lead.budget} />
             </div>
+            
+            {isEditing && (
+              <div className="mt-10 pt-10 border-t border-slate-100 animate-in slide-in-from-top-4 duration-300">
+                <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-4">Internal Administrative Notes</p>
+                <textarea 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs font-bold focus:border-orange-500 outline-none"
+                  defaultValue={lead.notes}
+                  rows={4}
+                />
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded-[32px] border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-8 border-b border-slate-100 bg-slate-50/30 flex justify-between items-center">
               <div>
-                <h3 className="text-sm font-extrabold text-[#001e42] uppercase italic">Tactical History</h3>
+                <h3 className="text-sm font-extrabold text-[#001e42] uppercase italic">
+                  <EditableText contentKey="lead_history_header" defaultVal="Tactical History" />
+                </h3>
                 <p className="text-[10px] text-slate-400 font-bold mt-0.5">Engagement touchpoints.</p>
               </div>
               <button className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors">
@@ -72,7 +105,6 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ leads, currentUser, onUpdateS
               </button>
             </div>
             <div className="p-8 space-y-4">
-               {/* Placeholder for timeline items */}
                <div className="flex gap-4">
                   <div className="flex flex-col items-center">
                     <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center">
@@ -93,12 +125,27 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ leads, currentUser, onUpdateS
         <div className="space-y-8">
           <div className="bg-[#001e42] p-8 rounded-[32px] shadow-xl text-white relative overflow-hidden">
             <Zap size={140} className="absolute -right-8 -top-8 opacity-5 rotate-12" />
-            <h3 className="text-xs font-bold uppercase tracking-widest text-orange-500 mb-6">Quick Actions</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-orange-500 mb-6">
+              <EditableText contentKey="lead_actions_header" defaultVal="Quick Actions" />
+            </h3>
             <div className="space-y-3">
               <ActionButton label="Dispatch Proposal" />
               <ActionButton label="Log WhatsApp Interaction" />
               <ActionButton label="Request Reservation Sync" />
             </div>
+          </div>
+          
+          <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm">
+             <h3 className="text-xs font-black text-[#001e42] uppercase italic mb-6">Assigned Intelligence</h3>
+             <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl">
+                <div className="w-10 h-10 rounded-xl bg-[#001e42] text-white flex items-center justify-center font-black text-sm italic">
+                   {lead.assignedAgent.charAt(0)}
+                </div>
+                <div>
+                   <p className="text-xs font-black text-[#001e42] italic">{lead.assignedAgent}</p>
+                   <p className="text-[10px] text-slate-400 font-bold uppercase">{lead.assignedDepartment}</p>
+                </div>
+             </div>
           </div>
         </div>
       </div>

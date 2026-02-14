@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Lead, LeadStatus, LeadSource, PrebuiltItinerary, User, UserRole, AgencySettings, Webhook } from '../types';
 import { 
@@ -37,7 +38,11 @@ import {
   Zap,
   Globe2,
   Search,
-  Facebook
+  Facebook,
+  IndianRupee,
+  Database,
+  TrendingUp,
+  Settings as SettingsIcon
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -64,33 +69,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   currentUser,
   webhooks,
   onAddWebhook,
-  onRemoveWebhook
+  onRemoveWebhook,
+  agencySettings,
+  setAgencySettings
 }) => {
-  const [activeTab, setActiveTab] = useState<'analytics' | 'reports' | 'templates' | 'users' | 'integrations'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'reports' | 'templates' | 'users' | 'integrations' | 'rates'>('analytics');
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showWebhookModal, setShowWebhookModal] = useState(false);
   const [selectedAgentsForComparison, setSelectedAgentsForComparison] = useState<string[]>([]);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
   
-  const [webhookForm, setWebhookForm] = useState({
-    name: '',
-    source: LeadSource.WEBSITE
-  });
-
-  const [templateForm, setTemplateForm] = useState<Omit<PrebuiltItinerary, 'id'>>({
-    title: '',
-    destination: '',
-    description: '',
-    durationDays: 3,
-    totalCost: 15000,
-    days: [
-      { day: 1, title: 'Arrival', activities: ['Transfer to Hotel'], meals: ['Dinner'], accommodation: 'Boutique Resort' },
-      { day: 2, title: 'Sightseeing', activities: ['Local Tour'], meals: ['Breakfast', 'Dinner'], accommodation: 'Boutique Resort' },
-      { day: 3, title: 'Departure', activities: ['Transfer to NJP/IXB'], meals: ['Breakfast'], accommodation: 'N/A' },
-    ],
-    thumbnail: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&q=80&w=800'
-  });
-
   const isSuperAdmin = currentUser.role === UserRole.SUPER_ADMIN;
 
   const agentPerformanceData = useMemo(() => {
@@ -131,29 +119,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const COLORS = ['#f26522', '#001e42', '#3b82f6', '#10b981'];
 
-  const handleAddTemplateInternal = (e: React.FormEvent) => {
-    e.preventDefault();
-    onAddTemplate({ ...templateForm, id: `T${Date.now()}` });
-    setShowTemplateModal(false);
-  };
-
-  const handleDeployWebhook = (e: React.FormEvent) => {
-    e.preventDefault();
-    const sourceSlug = webhookForm.source.toLowerCase().replace(/\s+/g, '_');
-    const newWebhook: Webhook = {
-      id: `WH-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
-      name: webhookForm.name,
-      source: webhookForm.source as LeadSource,
-      endpointUrl: `https://api.letmetravel.in/v1/ingest/${sourceSlug}_${Math.random().toString(36).substr(2, 4)}`,
-      secretKey: `lmt_sec_${Math.random().toString(36).substr(2, 8)}`,
-      status: 'Active',
-      createdAt: new Date().toISOString()
-    };
-    onAddWebhook(newWebhook);
-    setShowWebhookModal(false);
-    setWebhookForm({ name: '', source: LeadSource.WEBSITE });
-  };
-
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setCopyStatus(label);
@@ -184,10 +149,73 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
           <TabButton active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')}>Analytics</TabButton>
           <TabButton active={activeTab === 'reports'} onClick={() => setActiveTab('reports')}>Comparison</TabButton>
           <TabButton active={activeTab === 'templates'} onClick={() => setActiveTab('templates')}>Blueprints</TabButton>
+          <TabButton active={activeTab === 'rates'} onClick={() => setActiveTab('rates')}>Master Rates</TabButton>
           <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')}>Team</TabButton>
           <TabButton active={activeTab === 'integrations'} onClick={() => setActiveTab('integrations')}>Integrations</TabButton>
         </div>
       </div>
+
+      {activeTab === 'rates' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in slide-in-from-bottom-4 duration-500">
+           <section className="bg-white p-10 rounded-[48px] border border-slate-200 shadow-sm space-y-8">
+              <h3 className="text-xl font-black text-[#001e42] uppercase italic flex items-center gap-3">
+                 <SettingsIcon className="text-orange-600" /> Agency Billing Rules
+              </h3>
+              <div className="space-y-6">
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 flex items-center gap-2">
+                       <TrendingUp size={14} className="text-blue-600" /> Global Agency Markup
+                    </label>
+                    <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-3xl border border-slate-100 shadow-inner">
+                       <input 
+                         type="number" value={agencySettings.markupPercentage || 25} 
+                         onChange={e => setAgencySettings({...agencySettings, markupPercentage: parseInt(e.target.value)})}
+                         className="bg-transparent text-xl font-black text-[#001e42] outline-none flex-1" 
+                       />
+                       <span className="text-xl font-black text-slate-400">%</span>
+                    </div>
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 flex items-center gap-2">
+                       <Zap size={14} className="text-orange-600" /> Max Agent Discount
+                    </label>
+                    <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-3xl border border-slate-100 shadow-inner">
+                       <input 
+                         type="number" value={agencySettings.maxDiscount || 10} 
+                         onChange={e => setAgencySettings({...agencySettings, maxDiscount: parseInt(e.target.value)})}
+                         className="bg-transparent text-xl font-black text-[#001e42] outline-none flex-1" 
+                       />
+                       <span className="text-xl font-black text-slate-400">%</span>
+                    </div>
+                 </div>
+              </div>
+           </section>
+
+           <section className="bg-[#001e42] p-10 rounded-[48px] shadow-2xl text-white space-y-8">
+              <h3 className="text-xl font-black uppercase italic flex items-center gap-3 text-orange-500">
+                 <Database /> Asset Rate Master
+              </h3>
+              <div className="space-y-6">
+                 <div className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">4 Seater Fleet</span>
+                    <span className="text-lg font-black italic">₹3,500 <span className="text-[8px] opacity-40">/ DAY</span></span>
+                 </div>
+                 <div className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">6-8 Seater Fleet</span>
+                    <span className="text-lg font-black italic">₹4,500 <span className="text-[8px] opacity-40">/ DAY</span></span>
+                 </div>
+                 <div className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">Hotel Standard Tier</span>
+                    <span className="text-lg font-black italic">₹2,500 <span className="text-[8px] opacity-40">/ NIGHT</span></span>
+                 </div>
+                 <div className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">Hotel Premium Tier</span>
+                    <span className="text-lg font-black italic">₹3,500 <span className="text-[8px] opacity-40">/ NIGHT</span></span>
+                 </div>
+              </div>
+           </section>
+        </div>
+      )}
 
       {activeTab === 'analytics' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -321,48 +349,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
       )}
 
-      {activeTab === 'users' && (
-        <div className="bg-white rounded-[40px] border border-slate-200 shadow-xl overflow-hidden">
-           <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="text-lg font-black text-[#001e42] uppercase italic flex items-center gap-3">
-                 <Users size={20} className="text-orange-600" /> Agency Workforce
-              </h3>
-           </div>
-           <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                 <thead>
-                    <tr className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                       <th className="px-8 py-5">Officer</th>
-                       <th className="px-8 py-5">Role Designation</th>
-                       <th className="px-8 py-5 text-right">Actions</th>
-                    </tr>
-                 </thead>
-                 <tbody className="divide-y divide-slate-100">
-                    {users.map(u => (
-                      <tr key={u.id} className="hover:bg-slate-50 transition-colors">
-                         <td className="px-8 py-5">
-                            <div className="flex items-center gap-3">
-                               <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-black text-sm italic">{u.name.charAt(0)}</div>
-                               <div>
-                                  <p className="text-xs font-black text-[#001e42] italic">{u.name}</p>
-                                  <p className="text-[10px] text-slate-400 font-bold">{u.email}</p>
-                               </div>
-                            </div>
-                         </td>
-                         <td className="px-8 py-5">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-3 py-1 bg-slate-100 rounded-lg">{u.role}</span>
-                         </td>
-                         <td className="px-8 py-5 text-right no-print">
-                            <button className="p-2 text-slate-300 hover:text-orange-600 transition-all"><Edit3 size={16}/></button>
-                         </td>
-                      </tr>
-                    ))}
-                 </tbody>
-              </table>
-           </div>
-        </div>
-      )}
-
       {activeTab === 'integrations' && (
         <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
            <div className="bg-white p-10 rounded-[48px] border border-slate-200 shadow-xl space-y-8">
@@ -434,88 +420,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                  <Check className="text-emerald-500" size={18} /> {copyStatus} Copied to clipboard
               </div>
            )}
-        </div>
-      )}
-
-      {/* Blueprint Modal */}
-      {showTemplateModal && (
-        <div className="fixed inset-0 bg-[#001e42]/90 backdrop-blur-xl flex items-center justify-center z-50 p-6 no-print">
-           <div className="bg-white rounded-[56px] w-full max-w-3xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in duration-500">
-              <div className="p-10 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center shrink-0">
-                 <h3 className="text-2xl font-black text-[#001e42] uppercase italic">Blueprint Architect</h3>
-                 <button onClick={() => setShowTemplateModal(false)} className="p-3 text-slate-400 hover:text-rose-600 transition-colors"><X size={28}/></button>
-              </div>
-              <form onSubmit={handleAddTemplateInternal} className="flex-1 overflow-y-auto p-10 space-y-10 custom-scrollbar">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Itinerary Title</label>
-                       <input required value={templateForm.title} onChange={e => setTemplateForm({...templateForm, title: e.target.value})} className="w-full border-2 border-slate-100 rounded-3xl p-5 text-xs font-black focus:border-orange-500 outline-none uppercase" />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Destination</label>
-                       <input required value={templateForm.destination} onChange={e => setTemplateForm({...templateForm, destination: e.target.value})} className="w-full border-2 border-slate-100 rounded-3xl p-5 text-xs font-black focus:border-orange-500 outline-none uppercase" />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Budget (₹)</label>
-                       <input type="number" required value={templateForm.totalCost} onChange={e => setTemplateForm({...templateForm, totalCost: parseInt(e.target.value)})} className="w-full border-2 border-slate-100 rounded-3xl p-5 text-xs font-black focus:border-orange-500 outline-none" />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Thumbnail URL</label>
-                       <input required value={templateForm.thumbnail} onChange={e => setTemplateForm({...templateForm, thumbnail: e.target.value})} className="w-full border-2 border-slate-100 rounded-3xl p-5 text-[10px] font-bold focus:border-orange-500 outline-none" />
-                    </div>
-                 </div>
-                 <div className="space-y-4">
-                    <h4 className="text-sm font-black text-[#001e42] uppercase italic flex items-center gap-2"><Calendar size={16} className="text-orange-600" /> Logistics Stack</h4>
-                    <div className="space-y-4">
-                       {templateForm.days.map((day, idx) => (
-                         <div key={idx} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
-                            <input value={day.title} onChange={e => {
-                              const newDays = [...templateForm.days];
-                              newDays[idx].title = e.target.value;
-                              setTemplateForm({...templateForm, days: newDays});
-                            }} className="bg-transparent border-b border-slate-200 font-black uppercase text-[10px] outline-none w-full pb-2" placeholder="Day Headline" />
-                         </div>
-                       ))}
-                    </div>
-                 </div>
-                 <div className="pt-6 sticky bottom-0 bg-white">
-                    <button type="submit" className="w-full bg-orange-600 text-white font-black py-6 rounded-[32px] uppercase tracking-widest text-xs hover:bg-orange-700 transition-all shadow-2xl flex items-center justify-center gap-3">
-                       <Save size={18} /> Commit to Factory
-                    </button>
-                 </div>
-              </form>
-           </div>
-        </div>
-      )}
-
-      {/* Webhook Deployment Modal */}
-      {showWebhookModal && (
-        <div className="fixed inset-0 bg-[#001e42]/90 backdrop-blur-xl flex items-center justify-center z-50 p-6 no-print">
-           <div className="bg-white rounded-[56px] w-full max-w-lg shadow-2xl overflow-hidden flex flex-col animate-in zoom-in duration-500">
-              <div className="p-10 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center shrink-0">
-                 <h3 className="text-2xl font-black text-[#001e42] uppercase italic">Deploy Pipeline</h3>
-                 <button onClick={() => setShowWebhookModal(false)} className="p-3 text-slate-400 hover:text-rose-600 transition-colors"><X size={28}/></button>
-              </div>
-              <form onSubmit={handleDeployWebhook} className="p-10 space-y-10">
-                 <div className="space-y-6">
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Pipeline Name</label>
-                       <input required value={webhookForm.name} onChange={e => setWebhookForm({...webhookForm, name: e.target.value})} placeholder="e.g. Website Home Form" className="w-full border-2 border-slate-100 rounded-3xl p-5 text-xs font-black focus:border-orange-500 outline-none uppercase" />
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Data Source</label>
-                       <select value={webhookForm.source} onChange={e => setWebhookForm({...webhookForm, source: e.target.value as LeadSource})} className="w-full border-2 border-slate-100 rounded-3xl p-5 text-xs font-black focus:border-orange-500 outline-none uppercase appearance-none bg-white">
-                          <option value={LeadSource.WEBSITE}>Website Pipeline</option>
-                          <option value={LeadSource.FACEBOOK}>Facebook Leads Center</option>
-                          <option value={LeadSource.GOOGLE}>Google Search Ads</option>
-                       </select>
-                    </div>
-                 </div>
-                 <button type="submit" className="w-full bg-orange-600 text-white font-black py-6 rounded-[32px] uppercase tracking-widest text-xs hover:bg-orange-700 transition-all shadow-2xl flex items-center justify-center gap-3">
-                    <Zap size={18} /> Deploy Ingestion Engine
-                 </button>
-              </form>
-           </div>
         </div>
       )}
     </div>

@@ -18,7 +18,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isEditMode) return; // Prevent login while editing
+    if (isEditMode) return; 
     setIsLoading(true);
     setError('');
 
@@ -38,6 +38,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           role: UserRole.ADMIN,
           email: 'info@letmetravel.in',
           hierarchyLevel: 4
+        });
+      } else if (userId === 'agent_lmt' && password === 'Lmt@2025') {
+        onLogin({
+          id: 'u-sales-1',
+          name: 'Sales Executive',
+          role: UserRole.SALES,
+          email: 'sales@letmetravel.in',
+          hierarchyLevel: 2
         });
       } else {
         setError('Invalid Identification or Password.');

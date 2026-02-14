@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, createContext, useContext } from 'react';
 import * as RouterDOM from 'react-router-dom';
 const { HashRouter, Routes, Route, Link, useLocation, Navigate } = RouterDOM as any;
@@ -23,19 +24,21 @@ import {
   Link2,
   Lock,
   Eye,
-  Settings as EditToggleIcon
+  Settings as EditToggleIcon,
+  FileBadge
 } from 'lucide-react';
 
 import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
 import LeadDetails from './pages/LeadDetails';
 import ItineraryBuilder from './pages/ItineraryBuilder';
+import QuotationBuilder from './pages/QuotationBuilder';
 import ManualItinerary from './pages/ManualItinerary';
 import Vehicles from './pages/Vehicles';
 import AdminPanel from './pages/AdminPanel';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
-import { Lead, LeadSource, LeadStatus, PrebuiltItinerary, User, UserRole, RoutingStrategy, AgencySettings, Webhook, AppContent } from './types';
+import { Lead, LeadSource, LeadStatus, PrebuiltItinerary, User, UserRole, RoutingStrategy, AgencySettings, Webhook, AppContent, Quotation } from './types';
 
 // Context for global editability
 export const EditContext = createContext<{
@@ -141,9 +144,13 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
   const [webhooks, setWebhooks] = useState<Webhook[]>(INITIAL_WEBHOOKS);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  
+  // FIX: Added missing markupPercentage and maxDiscount to agencySettings initialization
   const [agencySettings, setAgencySettings] = useState<AgencySettings>({
     routingStrategy: RoutingStrategy.ROUND_ROBIN,
-    lastAssignedAgentIndex: 0
+    lastAssignedAgentIndex: 0,
+    markupPercentage: 25,
+    maxDiscount: 10
   });
 
   const [appContent, setAppContent] = useState<AppContent>(() => {
@@ -166,8 +173,8 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
     const path = location.pathname;
     if (path === '/') return 'Dashboard Overview';
     if (path.startsWith('/leads')) return 'Lead Pipeline';
-    if (path.startsWith('/itinerary')) return 'Travel Designer';
-    if (path === '/itinerary-builder') return 'Custom Construction';
+    if (path === '/itinerary') return 'Premium Quotations';
+    if (path === '/itinerary-builder') return 'Custom Builder';
     if (path === '/vehicles') return 'Fleet Management';
     if (path === '/admin') return 'Global Command';
     return 'Agency Operations';
@@ -182,14 +189,16 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
     setLeads(prev => [newLead, ...prev]);
   };
 
-  // Fix: Implemented handleAddWebhook to manage webhook list state.
   const handleAddWebhook = (newWebhook: Webhook) => {
     setWebhooks(prev => [...prev, newWebhook]);
   };
 
-  // Fix: Implemented onRemoveWebhook to manage webhook removal state.
   const onRemoveWebhook = (id: string) => {
     setWebhooks(prev => prev.filter(wh => wh.id !== id));
+  };
+
+  const handleAddTemplate = (newTemplate: PrebuiltItinerary) => {
+    setTemplates(prev => [newTemplate, ...prev]);
   };
 
   return (
@@ -229,8 +238,8 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
             </div>
             
             <SidebarLink to="/leads" icon={<LayoutDashboard size={18} />} label={<EditableText contentKey="menu_leads" defaultVal="Pipeline" />} onClick={() => setIsSidebarOpen(false)} />
-            <SidebarLink to="/itinerary" icon={<Map size={18} />} label={<EditableText contentKey="menu_designer" defaultVal="Designer" />} onClick={() => setIsSidebarOpen(false)} />
-            <SidebarLink to="/itinerary-builder" icon={<Edit3 size={18} />} label={<EditableText contentKey="menu_custom_builder" defaultVal="Custom Builder" />} onClick={() => setIsSidebarOpen(false)} />
+            <SidebarLink to="/itinerary" icon={<FileBadge size={18} />} label={<EditableText contentKey="menu_quotations" defaultVal="Quotations" />} onClick={() => setIsSidebarOpen(false)} />
+            <SidebarLink to="/itinerary-builder" icon={<Edit3 size={18} />} label={<EditableText contentKey="menu_designer" defaultVal="Custom Builder" />} onClick={() => setIsSidebarOpen(false)} />
             
             {isSuperAdmin && (
               <>
@@ -291,10 +300,10 @@ const AppLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ curr
               <Route path="/" element={isSuperAdmin ? <Dashboard leads={leads} currentUser={currentUser} /> : <Navigate to="/leads" replace />} />
               <Route path="/leads" element={<Leads leads={leads} onAddLead={handleAddLead} onUpdateStatus={() => {}} currentUser={currentUser} />} />
               <Route path="/leads/:id" element={<LeadDetails leads={leads} onUpdateStatus={() => {}} onReassign={() => {}} currentUser={currentUser} onUpdateFollowUps={() => {}} />} />
-              <Route path="/itinerary" element={<ItineraryBuilder leads={leads} templates={templates} currentUser={currentUser} />} />
-              <Route path="/itinerary-builder" element={<ManualItinerary leads={leads} currentUser={currentUser} />} />
+              <Route path="/itinerary" element={<QuotationBuilder leads={leads} currentUser={currentUser} />} />
+              <Route path="/itinerary-builder" element={<ManualItinerary leads={leads} currentUser={currentUser} onAddTemplate={handleAddTemplate} />} />
               <Route path="/vehicles" element={isSuperAdmin ? <Vehicles /> : <Navigate to="/leads" replace />} />
-              <Route path="/admin" element={isSuperAdmin ? <AdminPanel leads={leads} templates={templates} users={[]} onAddTemplate={() => {}} onSaveUser={() => {}} agencySettings={agencySettings} setAgencySettings={setAgencySettings} currentUser={currentUser} onExternalLead={handleAddLead} webhooks={webhooks} onAddWebhook={handleAddWebhook} onRemoveWebhook={onRemoveWebhook} /> : <Navigate to="/leads" replace />} />
+              <Route path="/admin" element={isSuperAdmin ? <AdminPanel leads={leads} templates={templates} users={[]} onAddTemplate={handleAddTemplate} onSaveUser={() => {}} agencySettings={agencySettings} setAgencySettings={setAgencySettings} currentUser={currentUser} onExternalLead={handleAddLead} webhooks={webhooks} onAddWebhook={handleAddWebhook} onRemoveWebhook={onRemoveWebhook} /> : <Navigate to="/leads" replace />} />
               <Route path="/settings" element={isSuperAdmin ? <Settings currentUser={currentUser} users={[]} onSaveUser={() => {}} /> : <Navigate to="/leads" replace />} />
             </Routes>
           </div>

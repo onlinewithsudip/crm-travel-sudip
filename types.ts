@@ -35,6 +35,8 @@ export enum RoutingStrategy {
 export interface AgencySettings {
   routingStrategy: RoutingStrategy;
   lastAssignedAgentIndex: number;
+  markupPercentage: number;
+  maxDiscount: number;
 }
 
 export interface FollowUp {
@@ -71,13 +73,65 @@ export interface Lead {
   followUps?: FollowUp[];
 }
 
+export interface ItineraryDay {
+  day: number;
+  title: string;
+  activities: string[];
+  meals: string[];
+  accommodation: string;
+  description?: string;
+}
+
+export interface HotelOption {
+  id: string;
+  name: string;
+  location: string;
+  category: string;
+  starRating: number;
+  image: string;
+  pricePerNight: number;
+}
+
+export interface VehicleOption {
+  id: string;
+  type: '4 Seater' | '6 Seater' | '8 Seater';
+  rate: number;
+}
+
+export interface Quotation {
+  id: string;
+  leadId: string;
+  packageCode: string;
+  date: string;
+  title: string;
+  duration: string;
+  startDate: string;
+  endDate: string;
+  adults: number;
+  kids: number;
+  travelDate: string;
+  travelers: string;
+  totalCost: number;
+  taxAmount: number;
+  discount: number;
+  itinerary: ItineraryDay[];
+  hotels: HotelOption[];
+  vehicle: VehicleOption;
+  vehicleInfo: string;
+  inclusions: string[];
+  exclusions: string[];
+  bookingPolicy: string;
+  cancellationPolicy: string;
+  terms: string;
+}
+
 export interface PrebuiltItinerary {
   id: string;
   title: string;
   destination: string;
   description: string;
   durationDays: number;
-  days: any[];
+  days: ItineraryDay[];
   totalCost: number;
   thumbnail?: string;
 }
